@@ -71,3 +71,20 @@ It stands for high-performance computations implementation. It is very beneﬁci
 Some of the following steps have been taken to implement the K nearest neighbors. First, to reduce the dimensions of the features, principal component analysis is used; after that, extracted features are converted to an array and broadcast to each node. After that KNN algorithm is implemented, which sorts the matrix by row and outputs the first k labels. The label appears the most as the predicted label for the test point.
 Evaluate the model using the metrics accuracy, precision, recall, and f1 score.
 
+**6- Performance evaluation and comparison of the methods**
+
+Now it's time to evaluate the models. For this work, classification metrics like confusion matrix, Accuracy, Precision, and recall were used.
+The KNN algorithm performed with K value set to 10. It gives an accuracy of 88.41% on the test dataset, the recall value of model is 1 it means the model is correctly detecting all the data points whereas the true negative rate (specificity) is very low around 0.13 which means our model is too eager to find the positive result.
+The target variables are imbalanced. So, to tune the parameters trainControl method was used in which 5-fold cross validation was used to balance the target class down sampling. The KNN model runs for 20 different K values and finds that the k=29 model performs the best. It gives an accuracy of 86.7% on the test dataset.
+
+**7- Discussion of the findings**
+
+**7.1- Discussion**
+
+CHD is a common disease and often leads to death due to various complications. In this work, we identify the most crucial factors that lead to CHD and predict the patient's overall risk. Features like age, prevalentHyp, sysBP are the major factors in predicting the coronary heart disease. To obtain this result various types of plots were made like histogram, bar plot and the scatter plot. Additionally a statistical Shapiro wilk test is conducted to find whether the data is normally distributed or not. From the Shapiro result I have found that our data is not normally distributed so to solve this I have used scale function which will scale the feature in the range -1 to 1. Then after that k means clustering is used to group all the features into two clusters. To find this optimal no of cluster values we have used a line chart was made. To find the most important factors with respect to the targeted variable a correlation heatmap was made. After that, a predictive model was made to predict CHD among patients. The target column is imbalanced, so the oversampling technique is performed. Then the KNN model is used which achieves an accuracy of 88.41% with the k value set to 10. The model is tuned and 5-fold cross-validation is used which achieves an accuracy of around 87% on the testing dataset. For the HPCI same algorithm is also used and it achieves lower performance than the traditional knn algorithm with an accuracy of 85.11%. This model also takes less time as compared to the machine learning model.
+
+**7.2- Limitations **
+
+There are only a few features are given for the patient. Therefore, to improve, you can also add additional features like medications history and heart imaging. You can also use an autoencoder for feature extraction and then apply a classification algorithm to improve the performance. I have used only a machine learning model on the imbalance data in this work.
+Finally I can conclude that the features like age, prevalentHyp, sysBP are the primary factors in predicting the heart disease and the K nearest algorithm performed well in predicting the heart disease. 
+
