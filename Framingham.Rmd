@@ -1,0 +1,417 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+#importing all the necessary packages
+```{r}
+library(DataExplorer)
+library(tidyverse)
+
+library(gridExtra)
+library(factoextra)
+
+```
+
+#Reading the csv file
+```{r}
+df <- read.csv('framingham.csv')
+head(df)
+
+```
+#Performing the basic data exploration 
+```{r}
+dim(df)
+
+summary(df)
+
+```
+
+# Using glimpse to get an overview of the data
+```{r}
+
+glimpse(df)
+
+```
+From the above I can observe that categorical variables are given in integer type
+
+
+
+
+# Checking for missing values in the dataset
+
+```{r}
+
+#Checking for missing values in the dataset
+plot_missing(df)
+
+```
+
+
+
+```{r}
+# Find missing values
+summary(is.na(df))
+
+
+```
+
+```{r}
+
+#install.packages("mice")
+library(mice)
+
+```
+
+
+
+```{r}
+#computing the missing values with the help of mice library 
+imputed_Data <- mice(df, m=5, maxit = 50, method = 'pmm', seed = 500)
+summary(imputed_Data)
+
+```
+
+```{r}
+# Checking for the missing values again to make sure all the missing values are handled properly 
+
+sum(is.na(imputed_Data))
+
+
+```
+
+
+```{r}
+data <- complete(imputed_Data,2)
+head(data)
+
+```
+
+
+```{r}
+
+dim(data)
+
+```
+
+
+```{r}
+
+sum(is.na(data))
+
+```
+
+# Checking for duplicate data
+```{r}
+
+sum(duplicated(data))
+
+```
+
+# using boxplot to find out the outliers
+```{r}
+
+plot_boxplot(data,by="TenYearCHD")
+
+```
+
+```{r}
+#defining the numerical columns 
+numerical_cols <- c("BMI", "heartRate", "glucose",
+              "totChol","age","sysBP","diaBP")  
+
+#finding outliers and removing it from dataset
+
+for (i in numerical_cols )
+{
+  result = data[,i][data[,i] %in% boxplot.stats(data[,i])$out]
+  data[,i][data[,i] %in% result] = NA
+} 
+
+df = drop_na(data)
+as.data.frame(colSums(is.na(df)))
+
+#saving the cleaned csv data
+write.csv(df, file = "clean_framingham.csv", row.names = TRUE)
+```
+
+
+# Exploratory data analysis in R
+
+
+```{r}
+# using bar plot to plot the categorical columns
+
+plot_bar(df,ggtheme = theme_bw(),title="Univariate analysis of Catergorical column using barplot")
+
+```
+
+
+```{r}
+#plotting histogram to analyze the continuous variable 
+
+num_cols <- c("age","BMI", "cigsPerDay","diaBP","heartRate", "glucose",
+              "totChol","sysBP")
+
+
+
+
+plot_histogram(df[num_cols],ggtheme = theme_bw(),title="Univariate analysis of Numerical column using histogram")
+```
+
+#Bivariate analysis
+```{r}
+
+
+
+str(df)
+# converting the male column into factors
+df$male = factor(df$male, levels = c(0, 1))
+
+#doing multivariate analysis on features like age, target column and male.
+
+a=ggplot(df, aes(x = age, y=TenYearCHD))+ geom_point(aes(shape=male,color=male))+geom_smooth()
+
+a+scale_x_continuous(name="age")+scale_y_continuous(name="TenYearCHD")+ggtitle("Age and Target with repect to gender")
+
+#doing multivariate analysis on features like  cigsPerDay, target column and male.
+
+b=ggplot(df, aes(x = cigsPerDay, y=TenYearCHD))+ geom_point(aes(shape=male,color=male))+geom_smooth()
+
+b+scale_x_continuous(name="cigsPerDay")+scale_y_continuous(name="TenYearCHD")+ggtitle("cigsPerDay and Target with repect to gender")
+
+
+#doing multivariate analysis on features like totchol, target column and male.
+
+c=ggplot(df, aes(x = totChol, y=TenYearCHD))+ geom_point(aes(shape=male,color=male))+geom_smooth()
+
+c+scale_x_continuous(name="totChol")+scale_y_continuous(name="TenYearCHD")+ggtitle("totChol and Target with repect to gender")
+
+#doing multivariate analysis on features like sysBP, target column and male.
+
+d=ggplot(df, aes(x = sysBP, y=TenYearCHD))+ geom_point(aes(shape=male,color=male))+geom_smooth()
+
+d+scale_x_continuous(name="sysBP")+scale_y_continuous(name="TenYearCHD")+ggtitle("sysBP and Target with repect to gender")
+
+grid.arrange(a,b,c,d, ncol=2, nrow=2)
+
+
+```
+
+
+
+
+
+
+# using Shapiro test to check whether the data is normally distributed or not
+```{r}
+
+lapply(df[num_cols], shapiro.test)
+
+```
+
+
+
+#plotting the correlation graph to analyze the relationship between variables 
+
+
+```{r}
+
+plot_correlation(df)
+
+```
+
+
+#finding out the optimal number of clusters 
+```{r}
+fviz_nbclust(df, FUNcluster = kmeans, method = "silhouette") + theme_classic() 
+
+```
+
+
+```{r}
+cl_kmeans1 <- eclust(df, k=2, FUNcluster="kmeans", hc_metric="euclidean", graph=FALSE)
+g <- fviz_silhouette(cl_kmeans1)
+
+```
+
+
+
+
+```{r}
+h <- fviz_cluster(cl_kmeans1, data = df, elipse.type = "convex") + theme_minimal()
+grid.arrange(g, h, ncol=2)
+
+```
+
+
+```{r}
+table(cl_kmeans1$cluster, df$TenYearCHD)
+
+
+```
+
+
+
+```{r}
+wts<-1/table(data$TenYearCHD)
+print(wts)
+
+```
+
+
+
+
+
+
+```{r}
+#install.packages('caTools')
+
+# converting the target column into the factors
+df$TenYearCHD = factor(df$TenYearCHD, levels = c(0, 1))
+df
+
+library(caTools)
+ 
+set.seed(123)
+
+#split the dataset into training and testing 
+split = sample.split(df$TenYearCHD, SplitRatio = 0.75)
+ 
+training_set = subset(df, split == TRUE)
+test_set = subset(df, split == FALSE)
+
+
+```
+
+
+```{r}
+
+# Feature Scaling is performed on the numerical columns
+training_set[num_cols] = scale(training_set[num_cols])
+test_set[num_cols] = scale(test_set[num_cols])
+
+
+```
+
+
+```{r}
+#install.packages("class")
+library(class)
+
+
+old <- Sys.time() 
+
+# implementation of knn algorithm 
+classifier = knn(train = training_set, test = test_set,cl = training_set$TenYearCHD, k=10)
+
+new <- Sys.time() - old
+print(new)
+
+```
+
+
+#evaluating the model on the test set 
+```{r}
+
+library(caret)
+
+confusionMatrix(table(classifier ,test_set$TenYearCHD))
+
+```
+
+
+
+
+
+
+
+```{r}
+old <- Sys.time() 
+
+library(ISLR)
+
+# using train control to perform upsampling in the Data
+ctrl <- trainControl(method="repeatedcv",number = 5,repeats = 3,sampling = "up")
+knnFit <- train(TenYearCHD ~ ., data = training_set, method = "knn", trControl = ctrl, preProcess = c("center","scale"),tuneLength = 20)
+knnFit
+
+new <- Sys.time() - old
+print(new)
+
+```
+
+```{r}
+#plotting the knn model
+plot(knnFit)
+
+```
+
+```{r}
+
+old <- Sys.time() 
+
+#again running the knn model
+classifier = knn(train = training_set, test = test_set,cl = training_set$TenYearCHD, k=29)
+
+new <- Sys.time() - old
+print(new)
+
+library(caret)
+#making the evaluation on the test set
+confusionMatrix(table(classifier, test_set$TenYearCHD))
+
+
+
+```
+
+
+
+
+
+```{r}
+
+
+
+```
+
+
+```{r}
+
+
+
+```
+
+
+```{r}
+
+
+
+```
+
+```{r}
+
+
+
+```
+
+
+```{r}
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
