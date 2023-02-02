@@ -36,7 +36,7 @@ In this project, some of the steps taken in doing EDA are given below.
 
 4.I am using the unsupervised learning technique like principal component analysis for doing the exploratory data analysis.
 
-**4.2- Implementation of KNN**
+**4- Implementation of KNN**
 
 After the **exploratory data analysis** is completed, the next step is to normalize the numerical column for that feature scaling is used.
 The second step is to split the dataset into training and testing in the ratio of 75:25. 
